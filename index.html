@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Neon Snake: Retro Evolution</title>
+
+    <!-- Link to the external JavaScript file with defer so it loads after the HTML -->
+    <script type="module" src="/src/main.js" defer></script>
+  </head>
+
+  <body>
+    <!-- Top Utility Controls -->
+    <div class="top-controls">
+      <button class="icon-btn" id="theme-btn" title="Toggle Theme">🌓</button>
+      <button class="icon-btn" id="sound-btn" title="Toggle Sound">🔊</button>
+      <button class="icon-btn" id="stats-btn" title="Statistics">📊</button>
+      <button class="icon-btn" id="ach-btn" title="Achievements">🏆</button>
+    </div>
+
+    <div class="game-wrapper">
+      <!-- MAIN MENU SCREEN -->
+      <div class="screen glass-panel" id="menu-screen">
+        <h1 class="logo">Neon Snake</h1>
+
+        <div class="quick-stats">
+          <div class="stat-item">
+            <span class="stat-val" id="menu-hi-score">0</span>
+            <span class="stat-lbl">High Score</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" id="menu-games-played">0</span>
+            <span class="stat-lbl">Games</span>
+          </div>
+        </div>
+
+        <!-- Difficulty Selector -->
+        <div class="setting-group">
+          <label class="setting-label">Difficulty</label>
+          <div class="options-grid">
+            <button class="opt-btn active" data-difficulty="easy">Easy</button>
+            <button class="opt-btn" data-difficulty="medium">Med</button>
+            <button class="opt-btn" data-difficulty="hard">Hard</button>
+            <button class="opt-btn" data-difficulty="extreme">Extr</button>
+          </div>
+        </div>
+
+        <!-- Skin Customization -->
+        <div class="setting-group">
+          <label class="setting-label">Snake Theme</label>
+          <div class="skin-grid">
+            <div class="skin-opt active" data-skin="green">
+              <div
+                class="skin-preview"
+                style="background: linear-gradient(#39ff14, #00f0ff)"
+              ></div>
+              <span class="skin-name">Toxic</span>
+            </div>
+            <div class="skin-opt" data-skin="neon">
+              <div
+                class="skin-preview"
+                style="background: linear-gradient(#00f0ff, #bd00ff)"
+              ></div>
+              <span class="skin-name">Cyber</span>
+            </div>
+            <div class="skin-opt" data-skin="pink">
+              <div
+                class="skin-preview"
+                style="background: linear-gradient(#ff007f, #ffe600)"
+              ></div>
+              <span class="skin-name">Barbie</span>
+            </div>
+            <div class="skin-opt" data-skin="gold">
+              <div
+                class="skin-preview"
+                style="background: linear-gradient(#ffe600, #ff6c00)"
+              ></div>
+              <span class="skin-name">Viper</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn" id="play-btn">Launch Game</button>
+      </div>
+
+      <!-- GAMEPLAY SCREEN -->
+      <div class="board-container hidden" id="game-screen">
+        <div class="hud glass-panel">
+          <div class="hud-left">
+            <div>Score: <span class="hud-val" id="current-score">0</span></div>
+            <div>
+              Combo: <span class="hud-val" id="combo-multiplier">1.0x</span>
+            </div>
+          </div>
+          <!-- Dynamic Dash Indicator -->
+          <div id="boost-indicator" class="hud-boost hidden">⚡ BOOSTING</div>
+          <div class="hud-right">
+            <button
+              class="icon-btn"
+              id="pause-btn"
+              style="width: 36px; height: 36px; font-size: 0.9rem"
+            >
+              ⏸
+            </button>
+          </div>
+        </div>
+
+        <!-- UX Upgrade: Active Powerups relocated out of the canvas -->
+        <div class="powerup-hud-container" id="powerup-overlay"></div>
+
+        <div id="canvas-wrapper">
+          <canvas id="game-canvas"></canvas>
+
+          <!-- PAUSE OVERLAY -->
+          <div class="modal-overlay hidden" id="pause-modal">
+            <div class="modal-content glass-panel">
+              <h2>GAME PAUSED</h2>
+              <button class="btn" id="resume-btn">Resume</button>
+              <button class="btn btn-outline" id="restart-btn">Restart</button>
+              <button class="btn btn-outline" id="quit-btn">
+                Quit to Menu
+              </button>
+            </div>
+          </div>
+
+          <!-- GAME OVER OVERLAY -->
+          <div class="modal-overlay hidden" id="game-over-modal">
+            <div class="modal-content glass-panel">
+              <h2 style="color: var(--neon-pink)">CRASH! Game Over</h2>
+              <div>
+                <p style="font-size: 0.9rem; color: var(--text-secondary)">
+                  Final Score
+                </p>
+                <h1
+                  style="font-size: 2.5rem; color: var(--neon-blue)"
+                  id="go-score"
+                >
+                  0
+                </h1>
+              </div>
+              <div
+                style="
+                  font-size: 0.85rem;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  text-align: left;
+                  background: var(--bg-secondary);
+                  padding: 10px;
+                  border-radius: 8px;
+                "
+              >
+                <div>
+                  Best Multiplier Achieved:
+                  <span
+                    id="go-combo"
+                    style="
+                      float: right;
+                      font-weight: bold;
+                      color: var(--neon-yellow);
+                    "
+                    >1x</span
+                  >
+                </div>
+                <div>
+                  Difficulty Played:
+                  <span
+                    id="go-diff"
+                    style="
+                      float: right;
+                      font-weight: bold;
+                      text-transform: uppercase;
+                    "
+                    >Medium</span
+                  >
+                </div>
+                <div>
+                  Length Achieved:
+                  <span id="go-length" style="float: right; font-weight: bold"
+                    >0</span
+                  >
+                </div>
+              </div>
+              <button class="btn" id="go-restart-btn">Try Again</button>
+              <button class="btn btn-outline" id="go-menu-btn">
+                Main Menu
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Virtual D-Pad for Mobile/Touch -->
+        <div class="mobile-controls">
+          <button class="touch-btn" id="btn-up">▲</button>
+          <button class="touch-btn" id="btn-left">◀</button>
+          <button class="touch-btn" id="btn-right">▶</button>
+          <button class="touch-btn" id="btn-down">▼</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATISTICS MODAL -->
+    <div class="modal-overlay hidden" id="stats-modal">
+      <div class="modal-content glass-panel" style="max-width: 440px">
+        <h2>Lifetime Stats</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <p class="stat-lbl">Games Played</p>
+            <p class="stat-val" id="stat-games">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-lbl">Total Food Eaten</p>
+            <p class="stat-val" id="stat-food">0</p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-lbl">Top High Score</p>
+            <p
+              class="stat-val"
+              id="stat-hiscore"
+              style="color: var(--neon-yellow)"
+            >
+              0
+            </p>
+          </div>
+          <div class="stat-card">
+            <p class="stat-lbl">Longest Snake</p>
+            <p class="stat-val" id="stat-length">0</p>
+          </div>
+          <div class="stat-card" style="grid-column: span 2">
+            <p class="stat-lbl">Favorite Mode</p>
+            <p class="stat-val" id="stat-favorite">Normal</p>
+          </div>
+        </div>
+
+        <h3
+          style="
+            text-align: left;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            color: var(--text-secondary);
+          "
+        >
+          Local Leaderboard
+        </h3>
+        <div class="leaderboard-list" id="leaderboard-container"></div>
+
+        <button
+          class="btn btn-outline"
+          id="stats-close-btn"
+          style="margin-top: 10px"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- ACHIEVEMENTS MODAL -->
+    <div class="modal-overlay hidden" id="ach-modal">
+      <div class="modal-content glass-panel" style="max-width: 440px">
+        <h2>Achievements</h2>
+        <p
+          style="
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: -10px;
+          "
+        >
+          Progress: <span id="ach-count">0/6</span> unlocked
+        </p>
+        <div class="achievements-list" id="ach-list-container"></div>
+        <button
+          class="btn btn-outline"
+          id="ach-close-btn"
+          style="margin-top: 10px"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast" id="achievement-toast">
+      <span style="font-size: 1.5rem">🏆</span>
+      <div style="display: flex; flex-direction: column; text-align: left">
+        <p
+          style="
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--neon-yellow);
+            font-weight: bold;
+          "
+        >
+          Achievement Unlocked!
+        </p>
+        <p id="toast-title" style="font-size: 0.9rem; font-weight: bold">
+          First Blood
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
