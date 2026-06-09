@@ -1,27 +1,54 @@
-# Neon Snake: Retro Evolution
+# Neon Snake Game 🐍✨
 
-An arcade-inspired, responsive browser game built using vanilla web technologies. Featuring a neon aesthetics combined with clean, glassmorphism-style layouts, dynamic power-ups, custom sound generation, localized user statistics, and smooth input controls.
+A modern, visually striking take on the classic arcade retro game. This version updates the timeless gameplay formula with high-contrast, glowing neon aesthetics, flexible themes, custom borders, and selectable difficulty speeds.
 
-## 🚀 Key Features
+🎮 **[Play Live Demo Here](https://neon-snake-gamee.netlify.app/)**  
+🖥️ **[GitHub Repository](https://github.com/Hammadniazi/neon-snake-game)**
 
-- **Arcade Aesthetics**: Deep cyberpunk themes, fluid animations, and high-performance HTML5 Canvas rendering.
-- **Dual Theme Support**: Swappable dark and light theme styles. Light theme variables are tuned to preserve high readability and contrast.
-- **Zero Loading Dependencies**: Interactive game audios are synthesized natively via the browser's Web Audio API, making the application 100% self-contained.
-- **Gamer-Grade Input Engine**:
-  - **Input Queue Buffer**: Resolves classic collision bugs during rapid, consecutive turn commands.
-  - **Spacebar Dashing**: Hold down Spacebar to increase speed by 2x for a score multiplier bonus.
-- **Diverse Food & Powerup States**:
-  - _Foods_: Normal, Golden, Speedy, Slow, and Mega items with unique particles.
-  - _Power-ups_: Shield, Magnet, Double Points, and Ghost wrap-around modes.
-- **Progress Tracking**: Integrated local high scores, leaderboard mock projections, lifetime stats, and 6 unlockable milestone achievements.
-- **UX Features**: Autopause when losing focus, custom snake theme skin options, responsive bounding structures, and built-in mobile swipe or virtual D-pad options.
+---
+
+## 🌟 Key Features
+
+- **Glow Neon Aesthetic:** Dark-mode environment paired with bright, pulsing neon lights for the snake and food items.
+- **Custom Theme Customization:** Switch seamlessly between **Red**, **Green**, and **Blue** preset themes, or define your own **Custom** color scheme.
+- **Difficulty Levels:** Tailor your gaming experience to your skill level:
+  - **Rookie:** A relaxed pace ideal for beginners.
+  - **Original:** The classic balanced experience.
+  - **Master:** Fast and intense movement to test your reflexes.
+- **Border Controls:** Toggle border mechanics to adjust difficulty and boundaries (e.g., solid wall collision vs. wrap-around warp modes).
+- **High Score Retention:** Automatically tracks your current score and persists your all-time high score locally in your browser (`localStorage`).
+
+---
+
+## 🕹️ How to Play
+
+1. Use the **Arrow Keys** or **W, A, S, D** on your keyboard to steer the snake [1].
+2. Gobble up the glowing energy pellets to grow longer and boost your score [1].
+3. Be careful not to collide with your own tail (or the boundaries if borders are enabled) [1].
+4. Aim to beat your personal high score with each attempt!
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **HTML5**: Semantic modals, responsive layout grids, and interactive vector canvasses.
-- **CSS3**: Flexbox/CSS Grid alignment, neon CSS variable configurations, custom transitions, keyframe glow animation sequences, and scrollbars.
-- **JavaScript (ES6+)**: Custom classes, tick timing controls via `requestAnimationFrame`, math vector checks, Web Audio API, and browser `localStorage` indexing.
+- **HTML5 (Canvas API):** Efficiently renders the grid, snake segments, and food animations on the screen.
+- **CSS3:** Leverages advanced shadow filters (`box-shadow` and `text-shadow`) to construct the premium glowing neon look.
+- **JavaScript (ES6):** Handles core game-state management, input listening, local high score storage, and collision detection.
 
 ---
+
+## 🚀 Getting Started
+
+To run this project locally on your machine, follow these steps:
+
+### Prerequisites
+
+A modern web browser and a simple static server (optional, though highly recommended for asset handling).
+
+### Local Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Hammadniazi/neon-snake-game.git
+   cd neon-snake-game
+   ```
