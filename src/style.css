@@ -42,7 +42,36 @@
   padding: 0;
   user-select: none;
   -webkit-user-select: none;
-  outline: none;
+  /* FIX WCAG 2.4.7: Removed global outline:none which hid all focus indicators.
+     Custom :focus-visible styles are defined below. */
+}
+
+/* FIX WCAG 2.4.7: Visible focus indicator for all interactive elements */
+:focus-visible {
+  outline: 2px solid var(--neon-blue);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* FIX WCAG 2.4.1: Skip navigation link (visible on focus) */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--neon-blue);
+  color: #000;
+  font-weight: 700;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid #000;
+  outline-offset: 2px;
 }
 
 body {
@@ -240,9 +269,11 @@ h1.logo {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-family: var(--font-family);
 }
 
-.opt-btn.active {
+.opt-btn.active,
+.opt-btn[aria-pressed="true"] {
   border-color: var(--neon-blue);
   color: #fff;
   background: rgba(0, 240, 255, 0.15);
@@ -257,7 +288,9 @@ h1.logo {
   width: 100%;
 }
 
-.skin-opt {
+/* FIX WCAG 2.1.1: skin-opt is now a <button> — reset button defaults */
+button.skin-opt {
+  font-family: var(--font-family);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -267,9 +300,13 @@ h1.logo {
   border-radius: 8px;
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
-.skin-opt.active {
+button.skin-opt.active,
+button.skin-opt[aria-pressed="true"] {
   border-color: var(--neon-pink);
   background: rgba(255, 0, 127, 0.1);
 }
@@ -283,6 +320,7 @@ h1.logo {
 .skin-name {
   font-size: 0.75rem;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 /* Stats Display in Main Menu */
@@ -341,10 +379,12 @@ h1.logo {
   align-items: center;
 }
 
-/* Dynamic Boost CSS Graphic */
+/* FIX WCAG 1.4.3: Changed text color from #fff to #0a0300 for sufficient
+   contrast against the orange background (#ff6c00 gives ~2.8:1 with white,
+   but ~7.4:1 with near-black). */
 .hud-boost {
   background: var(--neon-orange);
-  color: #fff;
+  color: #0a0300;
   font-size: 0.7rem;
   font-weight: 900;
   padding: 3px 8px;
@@ -448,6 +488,7 @@ canvas {
   justify-content: center;
   cursor: pointer;
   touch-action: manipulation;
+  font-family: var(--font-family);
 }
 
 .touch-btn:active {

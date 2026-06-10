@@ -2,10 +2,8 @@
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+    <!-- FIX WCAG 1.4.4: Removed maximum-scale=1.0 and user-scalable=no which prevented zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Neon Snake: Retro Evolution</title>
     <meta
       name="description"
@@ -25,17 +23,48 @@
       content="A feature-rich neon snake game. Neon themes, power-ups, achievements, combo system. Play free in your browser!"
     />
 
-    <!-- Link to the external JavaScript file with defer so it loads after the HTML -->
     <script type="module" src="/src/main.js" defer></script>
   </head>
 
   <body>
+    <!-- FIX WCAG 2.4.1: Skip navigation link for keyboard users -->
+    <a class="skip-link" href="#play-btn">Skip to game</a>
+
     <!-- Top Utility Controls -->
+    <!-- FIX WCAG 4.1.2: Added aria-label to all icon-only buttons -->
     <div class="top-controls">
-      <button class="icon-btn" id="theme-btn" title="Toggle Theme">🌓</button>
-      <button class="icon-btn" id="sound-btn" title="Toggle Sound">🔊</button>
-      <button class="icon-btn" id="stats-btn" title="Statistics">📊</button>
-      <button class="icon-btn" id="ach-btn" title="Achievements">🏆</button>
+      <button
+        class="icon-btn"
+        id="theme-btn"
+        aria-label="Toggle dark/light theme"
+        title="Toggle Theme"
+      >
+        🌓
+      </button>
+      <button
+        class="icon-btn"
+        id="sound-btn"
+        aria-label="Mute sound"
+        title="Toggle Sound"
+      >
+        🔊
+      </button>
+      <button
+        class="icon-btn"
+        id="stats-btn"
+        aria-label="View statistics"
+        title="Statistics"
+      >
+        📊
+      </button>
+      <button
+        class="icon-btn"
+        id="ach-btn"
+        aria-label="View achievements"
+        title="Achievements"
+      >
+        🏆
+      </button>
     </div>
 
     <div class="game-wrapper">
@@ -55,48 +84,100 @@
         </div>
 
         <!-- Difficulty Selector -->
+        <!-- FIX WCAG 1.3.1: Changed <label> (not associated with an input) to <span> with id,
+             added role="group" + aria-labelledby to the button group.
+             FIX WCAG 4.1.2: Added aria-pressed to communicate selected state. -->
         <div class="setting-group">
-          <label class="setting-label">Difficulty</label>
-          <div class="options-grid">
-            <button class="opt-btn active" data-difficulty="easy">Easy</button>
-            <button class="opt-btn" data-difficulty="medium">Med</button>
-            <button class="opt-btn" data-difficulty="hard">Hard</button>
-            <button class="opt-btn" data-difficulty="extreme">Xtreme</button>
+          <span class="setting-label" id="difficulty-label">Difficulty</span>
+          <div
+            class="options-grid"
+            role="group"
+            aria-labelledby="difficulty-label"
+          >
+            <button
+              class="opt-btn active"
+              data-difficulty="easy"
+              aria-pressed="true"
+            >
+              Easy
+            </button>
+            <!-- FIX WCAG 3.1.4 / UI: Added aria-label="Medium" for the abbreviated label -->
+            <button
+              class="opt-btn"
+              data-difficulty="medium"
+              aria-pressed="false"
+              aria-label="Medium"
+            >
+              Med
+            </button>
+            <button class="opt-btn" data-difficulty="hard" aria-pressed="false">
+              Hard
+            </button>
+            <button
+              class="opt-btn"
+              data-difficulty="extreme"
+              aria-pressed="false"
+            >
+              Xtreme
+            </button>
           </div>
         </div>
 
         <!-- Skin Customization -->
+        <!-- FIX WCAG 2.1.1 + 4.1.2: Converted <div> skin options to <button> elements
+             so they are keyboard-focusable and have semantic role.
+             Added aria-pressed to communicate selected state. -->
         <div class="setting-group">
-          <label class="setting-label">Snake Theme</label>
-          <div class="skin-grid">
-            <div class="skin-opt active" data-skin="green">
+          <span class="setting-label" id="skin-label">Snake Theme</span>
+          <div class="skin-grid" role="group" aria-labelledby="skin-label">
+            <button
+              class="skin-opt active"
+              data-skin="green"
+              aria-pressed="true"
+              aria-label="Toxic theme"
+            >
               <div
                 class="skin-preview"
                 style="background: linear-gradient(#39ff14, #00f0ff)"
               ></div>
               <span class="skin-name">Toxic</span>
-            </div>
-            <div class="skin-opt" data-skin="neon">
+            </button>
+            <button
+              class="skin-opt"
+              data-skin="neon"
+              aria-pressed="false"
+              aria-label="Cyber theme"
+            >
               <div
                 class="skin-preview"
                 style="background: linear-gradient(#00f0ff, #bd00ff)"
               ></div>
               <span class="skin-name">Cyber</span>
-            </div>
-            <div class="skin-opt" data-skin="pink">
+            </button>
+            <button
+              class="skin-opt"
+              data-skin="pink"
+              aria-pressed="false"
+              aria-label="Candy theme"
+            >
               <div
                 class="skin-preview"
                 style="background: linear-gradient(#ff007f, #ffe600)"
               ></div>
               <span class="skin-name">Candy</span>
-            </div>
-            <div class="skin-opt" data-skin="gold">
+            </button>
+            <button
+              class="skin-opt"
+              data-skin="gold"
+              aria-pressed="false"
+              aria-label="Viper theme"
+            >
               <div
                 class="skin-preview"
                 style="background: linear-gradient(#ffe600, #ff6c00)"
               ></div>
               <span class="skin-name">Viper</span>
-            </div>
+            </button>
           </div>
         </div>
 
@@ -107,7 +188,17 @@
       <div class="board-container hidden" id="game-screen">
         <div class="hud glass-panel">
           <div class="hud-left">
-            <div>Score: <span class="hud-val" id="current-score">0</span></div>
+            <!-- FIX WCAG 4.1.3: Added aria-live so score updates are announced -->
+            <div>
+              Score:
+              <span
+                class="hud-val"
+                id="current-score"
+                aria-live="polite"
+                aria-atomic="true"
+                >0</span
+              >
+            </div>
             <div>
               Combo: <span class="hud-val" id="combo-multiplier">1.0x</span>
             </div>
@@ -116,11 +207,15 @@
             </div>
           </div>
           <!-- Dynamic Dash Indicator -->
-          <div id="boost-indicator" class="hud-boost hidden">⚡ BOOSTING</div>
+          <div id="boost-indicator" class="hud-boost hidden" aria-live="polite">
+            ⚡ BOOSTING
+          </div>
           <div class="hud-right">
+            <!-- FIX WCAG 4.1.2: Added aria-label to pause button -->
             <button
               class="icon-btn"
               id="pause-btn"
+              aria-label="Pause game"
               style="width: 36px; height: 36px; font-size: 0.9rem"
             >
               ⏸
@@ -128,16 +223,28 @@
           </div>
         </div>
 
-        <!-- UX Upgrade: Active Powerups relocated out of the canvas -->
-        <div class="powerup-hud-container" id="powerup-overlay"></div>
+        <div
+          class="powerup-hud-container"
+          id="powerup-overlay"
+          aria-live="polite"
+          aria-label="Active power-ups"
+        ></div>
 
         <div id="canvas-wrapper">
-          <canvas id="game-canvas"></canvas>
+          <!-- FIX WCAG 4.1.2: Added role and aria-label to canvas -->
+          <canvas
+            id="game-canvas"
+            role="img"
+            aria-label="Snake game board. Use arrow keys or WASD to move. Space to boost. Escape to pause."
+          ></canvas>
 
           <!-- COUNTDOWN OVERLAY -->
           <div
             class="modal-overlay hidden"
             id="countdown-modal"
+            role="status"
+            aria-live="polite"
+            aria-label="Game starting countdown"
             style="background: rgba(10, 11, 16, 0.75)"
           >
             <div
@@ -153,9 +260,16 @@
           </div>
 
           <!-- PAUSE OVERLAY -->
-          <div class="modal-overlay hidden" id="pause-modal">
+          <!-- FIX WCAG 4.1.2: Added role="dialog", aria-modal, aria-labelledby -->
+          <div
+            class="modal-overlay hidden"
+            id="pause-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pause-title"
+          >
             <div class="modal-content glass-panel">
-              <h2>GAME PAUSED</h2>
+              <h2 id="pause-title">GAME PAUSED</h2>
               <button class="btn" id="resume-btn">Resume</button>
               <button class="btn btn-outline" id="restart-btn">Restart</button>
               <button class="btn btn-outline" id="quit-btn">
@@ -165,9 +279,19 @@
           </div>
 
           <!-- GAME OVER OVERLAY -->
-          <div class="modal-overlay hidden" id="game-over-modal">
+          <!-- FIX WCAG 4.1.2: Added role="dialog", aria-modal, aria-labelledby -->
+          <div
+            class="modal-overlay hidden"
+            id="game-over-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="gameover-title"
+          >
             <div class="modal-content glass-panel">
-              <h2 style="color: var(--neon-pink); letter-spacing: 2px">
+              <h2
+                id="gameover-title"
+                style="color: var(--neon-pink); letter-spacing: 2px"
+              >
                 💥 Game Over
               </h2>
               <div>
@@ -233,19 +357,37 @@
         </div>
 
         <!-- Virtual D-Pad for Mobile/Touch -->
-        <div class="mobile-controls">
-          <button class="touch-btn" id="btn-up">▲</button>
-          <button class="touch-btn" id="btn-left">◀</button>
-          <button class="touch-btn" id="btn-right">▶</button>
-          <button class="touch-btn" id="btn-down">▼</button>
+        <!-- FIX WCAG 4.1.2: Added aria-label to all directional buttons -->
+        <div
+          class="mobile-controls"
+          role="group"
+          aria-label="Directional controls"
+        >
+          <button class="touch-btn" id="btn-up" aria-label="Move up">▲</button>
+          <button class="touch-btn" id="btn-left" aria-label="Move left">
+            ◀
+          </button>
+          <button class="touch-btn" id="btn-right" aria-label="Move right">
+            ▶
+          </button>
+          <button class="touch-btn" id="btn-down" aria-label="Move down">
+            ▼
+          </button>
         </div>
       </div>
     </div>
 
     <!-- STATISTICS MODAL -->
-    <div class="modal-overlay hidden" id="stats-modal">
+    <!-- FIX WCAG 4.1.2: Added role="dialog", aria-modal, aria-labelledby -->
+    <div
+      class="modal-overlay hidden"
+      id="stats-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="stats-title"
+    >
       <div class="modal-content glass-panel" style="max-width: 440px">
-        <h2>Lifetime Stats</h2>
+        <h2 id="stats-title">Lifetime Stats</h2>
         <div class="stats-grid">
           <div class="stat-card">
             <p class="stat-lbl">Games Played</p>
@@ -285,7 +427,11 @@
         >
           Local Leaderboard
         </h3>
-        <div class="leaderboard-list" id="leaderboard-container"></div>
+        <div
+          class="leaderboard-list"
+          id="leaderboard-container"
+          role="list"
+        ></div>
 
         <button
           class="btn btn-outline"
@@ -298,9 +444,16 @@
     </div>
 
     <!-- ACHIEVEMENTS MODAL -->
-    <div class="modal-overlay hidden" id="ach-modal">
+    <!-- FIX WCAG 4.1.2: Added role="dialog", aria-modal, aria-labelledby -->
+    <div
+      class="modal-overlay hidden"
+      id="ach-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ach-title"
+    >
       <div class="modal-content glass-panel" style="max-width: 440px">
-        <h2>Achievements</h2>
+        <h2 id="ach-title">Achievements</h2>
         <p
           style="
             font-size: 0.8rem;
@@ -310,7 +463,11 @@
         >
           Progress: <span id="ach-count">0/6</span> unlocked
         </p>
-        <div class="achievements-list" id="ach-list-container"></div>
+        <div
+          class="achievements-list"
+          id="ach-list-container"
+          role="list"
+        ></div>
         <button
           class="btn btn-outline"
           id="ach-close-btn"
@@ -322,8 +479,14 @@
     </div>
 
     <!-- TOAST NOTIFICATION -->
-    <div class="toast" id="achievement-toast">
-      <span style="font-size: 1.5rem">🏆</span>
+    <!-- FIX WCAG 4.1.3: Added role="alert" so screen readers announce the achievement -->
+    <div
+      class="toast"
+      id="achievement-toast"
+      role="alert"
+      aria-live="assertive"
+    >
+      <span style="font-size: 1.5rem" aria-hidden="true">🏆</span>
       <div style="display: flex; flex-direction: column; text-align: left">
         <p
           style="
