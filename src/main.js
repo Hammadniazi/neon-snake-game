@@ -433,7 +433,6 @@ const Game = {
 
   startNewGame() {
     Sound.play("click");
-    this.state = STATE_PLAYING;
     this.score = 0;
     this.combo = 1.0;
     this.screenShake = 0;
@@ -470,12 +469,34 @@ const Game = {
     document.getElementById("pause-modal").classList.add("hidden");
     document.getElementById("game-over-modal").classList.add("hidden");
     this.updateHud();
+
+    // 3-2-1 countdown before gameplay starts
+    this.state = STATE_PAUSED;
+    const countdownEl = document.getElementById("countdown-number");
+    const countdownModal = document.getElementById("countdown-modal");
+    const counts = ["3", "2", "1", "GO!"];
+    let i = 0;
+    countdownModal.classList.remove("hidden");
+    const tick = () => {
+      if (i < counts.length) {
+        countdownEl.textContent = counts[i];
+        Sound.play("click");
+        i++;
+        setTimeout(tick, i < counts.length ? 700 : 400);
+      } else {
+        countdownModal.classList.add("hidden");
+        this.state = STATE_PLAYING;
+        this.lastTick = performance.now();
+      }
+    };
+    tick();
   },
 
   updateHud() {
     document.getElementById("current-score").innerText = this.score;
     document.getElementById("combo-multiplier").innerText =
       `${this.combo.toFixed(1)}x`;
+    document.getElementById("hud-best-score").innerText = Stats.highScore;
     const bi = document.getElementById("boost-indicator");
     if (this.isBoosting) {
       bi.classList.remove("hidden");
