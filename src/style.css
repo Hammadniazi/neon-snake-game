@@ -231,12 +231,15 @@ h1.logo {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  padding: 10px 5px;
-  font-size: 0.85rem;
+  padding: 10px 4px;
+  font-size: 0.78rem;
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .opt-btn.active {

@@ -7,6 +7,23 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>Neon Snake: Retro Evolution</title>
+    <meta
+      name="description"
+      content="A feature-rich neon snake game with 4 difficulty levels, combo multiplier, power-ups, achievements, and full mobile support. Play now!"
+    />
+    <meta property="og:title" content="Neon Snake: Retro Evolution" />
+    <meta
+      property="og:description"
+      content="A feature-rich neon snake game with 4 difficulty levels, combo multiplier, power-ups, achievements, and full mobile support."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://neon-snake-gamee.netlify.app/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Neon Snake: Retro Evolution" />
+    <meta
+      name="twitter:description"
+      content="A feature-rich neon snake game. Neon themes, power-ups, achievements, combo system. Play free in your browser!"
+    />
 
     <!-- Link to the external JavaScript file with defer so it loads after the HTML -->
     <script type="module" src="/src/main.js" defer></script>
@@ -44,7 +61,7 @@
             <button class="opt-btn active" data-difficulty="easy">Easy</button>
             <button class="opt-btn" data-difficulty="medium">Med</button>
             <button class="opt-btn" data-difficulty="hard">Hard</button>
-            <button class="opt-btn" data-difficulty="extreme">Extr</button>
+            <button class="opt-btn" data-difficulty="extreme">Xtreme</button>
           </div>
         </div>
 
@@ -71,7 +88,7 @@
                 class="skin-preview"
                 style="background: linear-gradient(#ff007f, #ffe600)"
               ></div>
-              <span class="skin-name">Barbie</span>
+              <span class="skin-name">Candy</span>
             </div>
             <div class="skin-opt" data-skin="gold">
               <div
@@ -94,6 +111,9 @@
             <div>
               Combo: <span class="hud-val" id="combo-multiplier">1.0x</span>
             </div>
+            <div style="font-size: 0.78rem; color: var(--text-secondary)">
+              Best: <span id="hud-best-score">0</span>
+            </div>
           </div>
           <!-- Dynamic Dash Indicator -->
           <div id="boost-indicator" class="hud-boost hidden">⚡ BOOSTING</div>
@@ -114,6 +134,24 @@
         <div id="canvas-wrapper">
           <canvas id="game-canvas"></canvas>
 
+          <!-- COUNTDOWN OVERLAY -->
+          <div
+            class="modal-overlay hidden"
+            id="countdown-modal"
+            style="background: rgba(10, 11, 16, 0.75)"
+          >
+            <div
+              id="countdown-number"
+              style="
+                font-size: 6rem;
+                font-weight: 900;
+                color: var(--neon-blue);
+                text-shadow: 0 0 40px var(--neon-blue);
+                animation: pulseGlow 0.5s infinite alternate;
+              "
+            ></div>
+          </div>
+
           <!-- PAUSE OVERLAY -->
           <div class="modal-overlay hidden" id="pause-modal">
             <div class="modal-content glass-panel">
@@ -129,7 +167,9 @@
           <!-- GAME OVER OVERLAY -->
           <div class="modal-overlay hidden" id="game-over-modal">
             <div class="modal-content glass-panel">
-              <h2 style="color: var(--neon-pink)">CRASH! Game Over</h2>
+              <h2 style="color: var(--neon-pink); letter-spacing: 2px">
+                💥 Game Over
+              </h2>
               <div>
                 <p style="font-size: 0.9rem; color: var(--text-secondary)">
                   Final Score
