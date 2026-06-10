@@ -287,6 +287,57 @@ const STATE_PLAYING = 1;
 const STATE_PAUSED = 2;
 const STATE_GAMEOVER = 3;
 
+// FIX WCAG 2.4.3: Track previously focused element to restore focus when modals close
+let _previousFocus = null;
+
+const FOCUSABLE =
+  'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+/** Open a modal: save prior focus, move focus to first focusable child, trap Tab inside. */
+function openModal(modalEl) {
+  _previousFocus = document.activeElement;
+  modalEl.removeAttribute("hidden");
+
+  const getFocusable = () => Array.from(modalEl.querySelectorAll(FOCUSABLE));
+  const first = getFocusable()[0];
+  if (first) first.focus();
+
+  // FIX WCAG 2.4.3: Trap focus inside modal — Tab/Shift+Tab cycle within it only
+  function trapFocus(e) {
+    if (e.key !== "Tab") return;
+    const focusable = getFocusable();
+    if (!focusable.length) return;
+    const firstEl = focusable[0];
+    const lastEl = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === firstEl) {
+        e.preventDefault();
+        lastEl.focus();
+      }
+    } else {
+      if (document.activeElement === lastEl) {
+        e.preventDefault();
+        firstEl.focus();
+      }
+    }
+  }
+
+  modalEl._trapFocus = trapFocus;
+  modalEl.addEventListener("keydown", trapFocus);
+}
+
+/** Close a modal: remove focus trap, restore focus to the trigger element. */
+function closeModal(modalEl) {
+  if (modalEl._trapFocus) {
+    modalEl.removeEventListener("keydown", modalEl._trapFocus);
+    delete modalEl._trapFocus;
+  }
+  if (_previousFocus) {
+    _previousFocus.focus();
+    _previousFocus = null;
+  }
+}
+
 const Game = {
   state: STATE_MENU,
   difficulty: "easy",
@@ -296,15 +347,14 @@ const Game = {
   snake: [],
   direction: { x: 1, y: 0 },
 
-  // Professional Upgrade: Dedicated Input Queue Buffer to eliminate turn latency collisions
   inputQueue: [],
-  isBoosting: false, // holding space triggers high-speed risk dashing
+  isBoosting: false,
 
   foods: [],
   powerups: [],
   activePowerups: {},
   particles: [],
-  floatingTexts: [], // floating text score notifications
+  floatingTexts: [],
   screenShake: 0,
   lastTick: 0,
   maxCurrentLength: 0,
@@ -380,7 +430,6 @@ const Game = {
     this.loadPreferences();
     this.updateMenuStats();
 
-    // Safeguard: Autopause when the window loses focus
     window.addEventListener("blur", () => {
       if (this.state === STATE_PLAYING) {
         this.togglePause();
@@ -409,21 +458,41 @@ const Game = {
     this.snakeSkin = Storage.get("pref_skin", "green");
     Sound.enabled = Storage.get("pref_sound", true);
 
+    // FIX WCAG 4.1.2: Sync aria-pressed to match loaded difficulty preference
     document.querySelectorAll("[data-difficulty]").forEach((btn) => {
-      btn.classList.toggle(
-        "active",
-        btn.dataset.difficulty === this.difficulty,
-      );
+      const isActive = btn.dataset.difficulty === this.difficulty;
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
+
+    // FIX WCAG 4.1.2: Sync aria-pressed to match loaded skin preference
     document.querySelectorAll("[data-skin]").forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.skin === this.snakeSkin);
+      const isActive = btn.dataset.skin === this.snakeSkin;
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
-    document.getElementById("sound-btn").innerText = Sound.enabled
-      ? "🔊"
-      : "🔇";
+
+    // FIX WCAG 4.1.2: Sync aria-label on sound button to reflect current state
+    const soundBtn = document.getElementById("sound-btn");
+    if (Sound.enabled) {
+      soundBtn.innerText = "🔊";
+      soundBtn.setAttribute("aria-label", "Mute sound");
+    } else {
+      soundBtn.innerText = "🔇";
+      soundBtn.setAttribute("aria-label", "Unmute sound");
+    }
 
     const savedTheme = Storage.get("pref_theme", "dark");
     document.documentElement.setAttribute("data-theme", savedTheme);
+    // FIX WCAG 4.1.2: Sync aria-label on theme button
+    document
+      .getElementById("theme-btn")
+      .setAttribute(
+        "aria-label",
+        savedTheme === "dark"
+          ? "Switch to light theme"
+          : "Switch to dark theme",
+      );
   },
 
   updateMenuStats() {
@@ -487,6 +556,9 @@ const Game = {
         countdownModal.classList.add("hidden");
         this.state = STATE_PLAYING;
         this.lastTick = performance.now();
+        // FIX WCAG 2.4.3: Move focus to canvas so keyboard controls work immediately
+        canvas.setAttribute("tabindex", "0");
+        canvas.focus();
       }
     };
     tick();
@@ -518,7 +590,6 @@ const Game = {
       );
       const onFood = this.foods.some((food) => food.x === rx && food.y === ry);
 
-      // Gamer Design Upgrade: Prevent items spawning inside a 3-cell safety radius from head
       const distFromHead = Math.abs(rx - head.x) + Math.abs(ry - head.y);
 
       if (!onSnake && !onFood && distFromHead >= 3) break;
@@ -562,7 +633,6 @@ const Game = {
       );
       const onFood = this.foods.some((food) => food.x === rx && food.y === ry);
 
-      // Pro Safeguard: Maintain safety margins around snake head
       const distFromHead = Math.abs(rx - head.x) + Math.abs(ry - head.y);
 
       if (!onSnake && !onFood && distFromHead >= 3) break;
@@ -608,7 +678,7 @@ const Game = {
         const badge = document.createElement("div");
         badge.className = "powerup-badge";
         badge.style.borderLeft = `3px solid ${meta.color}`;
-        badge.innerHTML = `<span>${meta.icon}</span> <span>${meta.name}</span> <span style="color:${meta.color}; margin-left: 5px;">${Math.ceil(remaining / 1000)}s</span>`;
+        badge.innerHTML = `<span aria-hidden="true">${meta.icon}</span> <span>${meta.name}</span> <span style="color:${meta.color}; margin-left: 5px;" aria-label="${Math.ceil(remaining / 1000)} seconds remaining">${Math.ceil(remaining / 1000)}s</span>`;
         overlay.appendChild(badge);
       }
     });
@@ -622,7 +692,6 @@ const Game = {
     const triggerDirection = (dirKey) => {
       if (this.state !== STATE_PLAYING) return;
 
-      // Evaluates pending items in queue buffer, falling back to current active vector
       const lastDir =
         this.inputQueue.length > 0
           ? this.inputQueue[this.inputQueue.length - 1]
@@ -648,7 +717,6 @@ const Game = {
           break;
       }
 
-      // Limit buffer size to 2 entries to avoid sliding lag
       if (target && this.inputQueue.length < 2) {
         this.inputQueue.push(target);
       }
@@ -662,11 +730,17 @@ const Game = {
       ) {
         e.preventDefault();
       }
+
+      // FIX keyboard accessibility: Prevent Tab from moving focus away from the
+      // canvas while the game is actively playing, so arrow-key controls keep working.
+      if (e.code === "Tab" && this.state === STATE_PLAYING) {
+        e.preventDefault();
+      }
+
       if (e.code === "Escape") {
         this.togglePause();
       }
 
-      // Spacebar: Dash Mechanic
       if (e.code === "Space" && this.state === STATE_PLAYING) {
         this.isBoosting = true;
         this.updateHud();
@@ -683,7 +757,9 @@ const Game = {
     });
 
     const bindControl = (btnId, key) => {
-      document.getElementById(btnId).addEventListener(
+      const btn = document.getElementById(btnId);
+
+      btn.addEventListener(
         "touchstart",
         (e) => {
           e.preventDefault();
@@ -691,8 +767,16 @@ const Game = {
         },
         { passive: false },
       );
-      document.getElementById(btnId).addEventListener("mousedown", () => {
+
+      btn.addEventListener("mousedown", () => {
         triggerDirection(key);
+      });
+
+      // FIX keyboard accessibility: Enter/Space on a focused <button> fires 'click'
+      // (not mousedown), so keyboard users couldn't trigger D-pad directions.
+      // e.detail === 0 means the click was keyboard-initiated (not mouse).
+      btn.addEventListener("click", (e) => {
+        if (e.detail === 0) triggerDirection(key);
       });
     };
 
@@ -738,11 +822,18 @@ const Game = {
     if (this.state === STATE_PLAYING) {
       Sound.play("click");
       this.state = STATE_PAUSED;
-      document.getElementById("pause-modal").classList.remove("hidden");
+      const pauseModal = document.getElementById("pause-modal");
+      pauseModal.classList.remove("hidden");
+      // FIX WCAG 2.4.3: Move focus into the pause modal
+      openModal(pauseModal);
     } else if (this.state === STATE_PAUSED) {
       Sound.play("click");
       this.state = STATE_PLAYING;
-      document.getElementById("pause-modal").classList.add("hidden");
+      const pauseModal = document.getElementById("pause-modal");
+      pauseModal.classList.add("hidden");
+      // FIX WCAG 2.4.3: Restore focus to canvas on resume
+      closeModal(pauseModal);
+      canvas.focus();
     }
   },
 
@@ -763,7 +854,6 @@ const Game = {
       activeSpeed *= 1.4;
     }
 
-    // Dash Booster scale
     if (this.isBoosting) {
       activeSpeed *= 0.5;
     }
@@ -778,7 +868,6 @@ const Game = {
   },
 
   updateVisuals() {
-    // UI/UX Upgrade: Damped harmonic decay spring on screen shake
     if (this.screenShake > 0) {
       this.screenShake *= 0.85;
       if (this.screenShake < 0.1) this.screenShake = 0;
@@ -800,7 +889,6 @@ const Game = {
     this.foods.forEach((f) => (f.pulse += 0.12));
     this.powerups.forEach((p) => (p.pulse += 0.08));
 
-    // Update Standard particles with CPU load limiting bounds
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.update();
@@ -812,7 +900,6 @@ const Game = {
       this.particles.splice(0, this.particles.length - 150);
     }
 
-    // UI/UX Upgrade: Process floating score popups
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
       const t = this.floatingTexts[i];
       t.y += t.vy;
@@ -824,7 +911,6 @@ const Game = {
   },
 
   moveSnake() {
-    // Consume direction instruction from safety input queue
     if (this.inputQueue.length > 0) {
       this.direction = this.inputQueue.shift();
     }
@@ -915,21 +1001,19 @@ const Game = {
   handleEatFood(food, index) {
     this.foods.splice(index, 1);
 
-    // Boosting triggers double combo gains
     const comboStep = this.isBoosting ? 0.4 : 0.2;
     this.combo += comboStep;
 
     const foodConfig = this.foodTypes[food.type];
     const diffMult = this.speeds[this.difficulty].mult;
     const multiActive = this.activePowerups["multiplier"] ? 2.0 : 1.0;
-    const dashBonus = this.isBoosting ? 1.5 : 1.0; // Dashing yields score bonuses
+    const dashBonus = this.isBoosting ? 1.5 : 1.0;
 
     const gainedPoints = Math.round(
       foodConfig.points * diffMult * this.combo * multiActive * dashBonus,
     );
     this.score += gainedPoints;
 
-    // UI/UX Score floating popup
     this.floatingTexts.push({
       x: food.x * cellWidth + cellWidth / 2,
       y: food.y * cellHeight,
@@ -1016,7 +1100,11 @@ const Game = {
     document.getElementById("go-combo").innerText = `${this.combo.toFixed(1)}x`;
     document.getElementById("go-diff").innerText = this.difficulty;
     document.getElementById("go-length").innerText = this.maxCurrentLength;
-    document.getElementById("game-over-modal").classList.remove("hidden");
+
+    const goModal = document.getElementById("game-over-modal");
+    goModal.classList.remove("hidden");
+    // FIX WCAG 2.4.3: Move focus into the game-over modal
+    openModal(goModal);
   },
 
   draw() {
@@ -1133,7 +1221,7 @@ const Game = {
       ctx.restore();
     });
 
-    // UI/UX Upgrade: Render Floating score texts
+    // Render Floating score texts
     this.floatingTexts.forEach((t) => {
       ctx.save();
       ctx.globalAlpha = t.alpha;
@@ -1179,10 +1267,13 @@ const Game = {
 document.querySelectorAll("[data-difficulty]").forEach((btn) => {
   btn.addEventListener("click", (e) => {
     Sound.play("click");
-    document
-      .querySelectorAll("[data-difficulty]")
-      .forEach((b) => b.classList.remove("active"));
+    // FIX WCAG 4.1.2: Update aria-pressed on all difficulty buttons
+    document.querySelectorAll("[data-difficulty]").forEach((b) => {
+      b.classList.remove("active");
+      b.setAttribute("aria-pressed", "false");
+    });
     btn.classList.add("active");
+    btn.setAttribute("aria-pressed", "true");
     Game.difficulty = btn.dataset.difficulty;
     Storage.set("pref_difficulty", Game.difficulty);
   });
@@ -1191,11 +1282,14 @@ document.querySelectorAll("[data-difficulty]").forEach((btn) => {
 document.querySelectorAll("[data-skin]").forEach((btn) => {
   btn.addEventListener("click", (e) => {
     Sound.play("click");
-    document
-      .querySelectorAll("[data-skin]")
-      .forEach((b) => b.classList.remove("active"));
+    // FIX WCAG 4.1.2: Update aria-pressed on all skin buttons
+    document.querySelectorAll("[data-skin]").forEach((b) => {
+      b.classList.remove("active");
+      b.setAttribute("aria-pressed", "false");
+    });
     const el = e.currentTarget;
     el.classList.add("active");
+    el.setAttribute("aria-pressed", "true");
     Game.snakeSkin = el.dataset.skin;
     Storage.set("pref_skin", Game.snakeSkin);
   });
@@ -1204,16 +1298,28 @@ document.querySelectorAll("[data-skin]").forEach((btn) => {
 document.getElementById("sound-btn").addEventListener("click", (e) => {
   Sound.enabled = !Sound.enabled;
   Sound.play("click");
-  e.currentTarget.innerText = Sound.enabled ? "🔊" : "🔇";
+  // FIX WCAG 4.1.2: Update both text and aria-label when sound is toggled
+  if (Sound.enabled) {
+    e.currentTarget.innerText = "🔊";
+    e.currentTarget.setAttribute("aria-label", "Mute sound");
+  } else {
+    e.currentTarget.innerText = "🔇";
+    e.currentTarget.setAttribute("aria-label", "Unmute sound");
+  }
   Storage.set("pref_sound", Sound.enabled);
 });
 
-document.getElementById("theme-btn").addEventListener("click", () => {
+document.getElementById("theme-btn").addEventListener("click", (e) => {
   Sound.play("click");
   const currentTheme = document.documentElement.getAttribute("data-theme");
   const targetTheme = currentTheme === "dark" ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", targetTheme);
   Storage.set("pref_theme", targetTheme);
+  // FIX WCAG 4.1.2: Update aria-label to reflect new theme state
+  e.currentTarget.setAttribute(
+    "aria-label",
+    targetTheme === "dark" ? "Switch to light theme" : "Switch to dark theme",
+  );
 });
 
 document.getElementById("play-btn").addEventListener("click", () => {
@@ -1234,6 +1340,8 @@ document.getElementById("quit-btn").addEventListener("click", () => {
   Game.state = STATE_MENU;
   document.getElementById("game-screen").classList.add("hidden");
   document.getElementById("menu-screen").classList.remove("hidden");
+  // FIX WCAG 2.4.3: Restore focus to play button when quitting to menu
+  document.getElementById("play-btn").focus();
 });
 
 document.getElementById("go-restart-btn").addEventListener("click", () => {
@@ -1244,6 +1352,8 @@ document.getElementById("go-menu-btn").addEventListener("click", () => {
   Game.state = STATE_MENU;
   document.getElementById("game-screen").classList.add("hidden");
   document.getElementById("menu-screen").classList.remove("hidden");
+  // FIX WCAG 2.4.3: Restore focus to play button when returning to menu
+  document.getElementById("play-btn").focus();
 });
 
 const statsModal = document.getElementById("stats-modal");
@@ -1271,15 +1381,20 @@ document.getElementById("stats-btn").addEventListener("click", () => {
   Leaderboard.forEach((entry, idx) => {
     const row = document.createElement("div");
     row.className = `lead-row ${entry.name === "YOU" ? "current-user" : ""}`;
+    row.setAttribute("role", "listitem");
     row.innerHTML = `<span>#${idx + 1} ${entry.name}</span> <span style="text-transform:uppercase; font-size: 0.75rem; color:var(--text-secondary);">${entry.difficulty}</span> <span>${entry.score} pts</span>`;
     leadList.appendChild(row);
   });
 
   statsModal.classList.remove("hidden");
+  // FIX WCAG 2.4.3: Move focus into stats modal
+  openModal(statsModal);
 });
 document.getElementById("stats-close-btn").addEventListener("click", () => {
   Sound.play("click");
   statsModal.classList.add("hidden");
+  // FIX WCAG 2.4.3: Restore focus after closing stats modal
+  closeModal(statsModal);
 });
 
 const achModal = document.getElementById("ach-modal");
@@ -1296,10 +1411,11 @@ document.getElementById("ach-btn").addEventListener("click", () => {
   Achievements.forEach((ach) => {
     const row = document.createElement("div");
     row.className = `achievement-row ${ach.unlocked ? "unlocked" : ""}`;
+    row.setAttribute("role", "listitem");
     row.innerHTML = `
-            <div class="ach-icon">${ach.icon}</div>
+            <div class="ach-icon" aria-hidden="true">${ach.icon}</div>
             <div class="ach-info">
-                <span class="ach-title">${ach.title}</span>
+                <span class="ach-title">${ach.title}${ach.unlocked ? " (unlocked)" : ""}</span>
                 <span class="ach-desc">${ach.desc}</span>
             </div>
         `;
@@ -1307,10 +1423,14 @@ document.getElementById("ach-btn").addEventListener("click", () => {
   });
 
   achModal.classList.remove("hidden");
+  // FIX WCAG 2.4.3: Move focus into achievements modal
+  openModal(achModal);
 });
 document.getElementById("ach-close-btn").addEventListener("click", () => {
   Sound.play("click");
   achModal.classList.add("hidden");
+  // FIX WCAG 2.4.3: Restore focus after closing achievements modal
+  closeModal(achModal);
 });
 
 Game.init();
