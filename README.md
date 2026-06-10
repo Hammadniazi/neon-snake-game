@@ -11,7 +11,7 @@ A feature-rich browser snake game built with vanilla HTML, CSS, and JavaScript �
 ### Gameplay
 
 - **4 difficulty levels** — Easy, Medium, Hard, Xtreme (each with a different speed and score multiplier)
-- **Combo multiplier** — eat food quickly to chain combos and multiply your score
+- **Combo multiplier** — eat food consecutively to build a combo multiplier; the chain resets after 3 seconds without eating
 - **Boost / dash mechanic** — hold `Space` for a burst of speed with bonus score
 - **5 food types** — Normal, Golden, Mega, Speedy, Slow Down (each with different points and effects)
 - **4 power-ups** — Shield 🛡️, Magnet 🧲, 2× Points ⚡, Ghost 👻 (with active timers shown in HUD)
@@ -44,11 +44,11 @@ A feature-rich browser snake game built with vanilla HTML, CSS, and JavaScript �
 
 ## 🚀 Getting Started
 
-No build tools or dependencies required for playing. It's a Vite project for development.
+Uses Vite for development — the game relies on ES module imports that browsers cannot resolve directly from the filesystem.
 
 ### Play instantly
 
-Open `index.html` directly — or use the [live demo](https://neon-snake-gamee.netlify.app).
+Use the [live demo](https://neon-snake-gamee.netlify.app), or run `npm run dev` and open `http://localhost:5173`.
 
 ### Local development
 
@@ -79,8 +79,7 @@ neon-snake-game/
 ├── src/
 │   ├── main.js         # All game logic — engine, controls, UI, storage, achievements
 │   └── style.css       # All styling — neon theme variables, animations, responsive layout
-├── package.json        # Vite dev dependency
-└── vite.config.js      # Vite config (if present)
+└── package.json        # Vite dev dependency
 ```
 
 ---

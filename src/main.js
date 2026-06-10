@@ -119,12 +119,8 @@ const Stats = {
 
   increment(key, val = 1) {
     this[key] += val;
-    Storage.set(`stats_${this.snakeToCamel(key)}`, this[key]);
-  },
-  snakeToCamel(str) {
-    return str.replace(/([-_][a-z])/g, (group) =>
-      group.toUpperCase().replace("-", "").replace("_", ""),
-    );
+    const storageKey = key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+    Storage.set(`stats_${storageKey}`, this[key]);
   },
 };
 
@@ -137,10 +133,14 @@ let Leaderboard = Storage.get("leaderboard", [
 ]);
 
 function updateLeaderboard(score, difficulty) {
-  Leaderboard.push({ name: "YOU", score, difficulty });
-  Leaderboard.sort((a, b) => b.score - a.score);
-  Leaderboard = Leaderboard.slice(0, 5);
-  Storage.set("leaderboard", Leaderboard);
+  const prevBest = Leaderboard.find((e) => e.name === "YOU");
+  if (!prevBest || score > prevBest.score) {
+    Leaderboard = Leaderboard.filter((e) => e.name !== "YOU");
+    Leaderboard.push({ name: "YOU", score, difficulty });
+    Leaderboard.sort((a, b) => b.score - a.score);
+    Leaderboard = Leaderboard.slice(0, 5);
+    Storage.set("leaderboard", Leaderboard);
+  }
 }
 
 // ============================================================================
@@ -357,6 +357,7 @@ const Game = {
   floatingTexts: [],
   screenShake: 0,
   lastTick: 0,
+  lastFoodTime: 0,
   maxCurrentLength: 0,
 
   skins: {
@@ -519,11 +520,11 @@ const Game = {
     this.activePowerups = {};
     this.particles = [];
     this.floatingTexts = [];
+    this.lastFoodTime = Date.now();
 
     this.spawnFood();
 
-    Stats.gamesPlayed++;
-    Storage.set("stats_games_played", Stats.gamesPlayed);
+    Stats.increment("gamesPlayed");
 
     Stats.favorites[this.difficulty] =
       (Stats.favorites[this.difficulty] || 0) + 1;
@@ -568,7 +569,7 @@ const Game = {
     document.getElementById("current-score").innerText = this.score;
     document.getElementById("combo-multiplier").innerText =
       `${this.combo.toFixed(1)}x`;
-    document.getElementById("hud-best-score").innerText = Stats.highScore;
+    document.getElementById("hud-best-score").innerText = Stats.highScore || "–";
     const bi = document.getElementById("boost-indicator");
     if (this.isBoosting) {
       bi.classList.remove("hidden");
@@ -682,6 +683,10 @@ const Game = {
         overlay.appendChild(badge);
       }
     });
+
+    const wrapper = document.getElementById("canvas-wrapper");
+    wrapper.classList.toggle("powerup-ghost", !!this.activePowerups["ghost"]);
+    wrapper.classList.toggle("powerup-magnet", !!this.activePowerups["magnet"]);
   },
 
   triggerScreenShake(amt) {
@@ -738,7 +743,9 @@ const Game = {
       }
 
       if (e.code === "Escape") {
-        this.togglePause();
+        if (!closeTopModal()) {
+          this.togglePause();
+        }
       }
 
       if (e.code === "Space" && this.state === STATE_PLAYING) {
@@ -886,6 +893,11 @@ const Game = {
       this.renderActivePowerupsUI();
     }
 
+    if (this.combo > 1.0 && this.state === STATE_PLAYING && Date.now() - this.lastFoodTime > 3000) {
+      this.combo = 1.0;
+      this.updateHud();
+    }
+
     this.foods.forEach((f) => (f.pulse += 0.12));
     this.powerups.forEach((p) => (p.pulse += 0.08));
 
@@ -1003,6 +1015,7 @@ const Game = {
 
     const comboStep = this.isBoosting ? 0.4 : 0.2;
     this.combo += comboStep;
+    this.lastFoodTime = Date.now();
 
     const foodConfig = this.foodTypes[food.type];
     const diffMult = this.speeds[this.difficulty].mult;
@@ -1047,7 +1060,7 @@ const Game = {
     this.updateHud();
     this.spawnFood();
 
-    Stats.increment("total_food");
+    Stats.increment("totalFood");
 
     const statePayload = {
       score: this.score,
@@ -1108,7 +1121,7 @@ const Game = {
   },
 
   draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, cellWidth * GRID_CELLS, cellHeight * GRID_CELLS);
 
     ctx.save();
     if (this.screenShake > 0) {
@@ -1245,15 +1258,17 @@ const Game = {
         : "rgba(0, 0, 0, 0.03)";
     ctx.lineWidth = 1;
 
+    const logW = cellWidth * GRID_CELLS;
+    const logH = cellHeight * GRID_CELLS;
     for (let i = 0; i <= GRID_CELLS; i++) {
       ctx.beginPath();
       ctx.moveTo(i * cellWidth, 0);
-      ctx.lineTo(i * cellWidth, canvas.height);
+      ctx.lineTo(i * cellWidth, logH);
       ctx.stroke();
 
       ctx.beginPath();
       ctx.moveTo(0, i * cellHeight);
-      ctx.lineTo(canvas.width, i * cellHeight);
+      ctx.lineTo(logW, i * cellHeight);
       ctx.stroke();
     }
     ctx.restore();
@@ -1431,6 +1446,29 @@ document.getElementById("ach-close-btn").addEventListener("click", () => {
   achModal.classList.add("hidden");
   // FIX WCAG 2.4.3: Restore focus after closing achievements modal
   closeModal(achModal);
+});
+
+function closeTopModal() {
+  for (const id of ["stats-modal", "ach-modal"]) {
+    const el = document.getElementById(id);
+    if (!el.classList.contains("hidden")) {
+      el.classList.add("hidden");
+      closeModal(el);
+      Sound.play("click");
+      return true;
+    }
+  }
+  return false;
+}
+
+[statsModal, achModal].forEach((modal) => {
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.classList.add("hidden");
+      closeModal(modal);
+      Sound.play("click");
+    }
+  });
 });
 
 Game.init();

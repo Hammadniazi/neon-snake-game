@@ -670,3 +670,16 @@ canvas {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--neon-blue);
 }
+
+/* Ghost and Magnet power-up: border feedback on canvas wrapper */
+#canvas-wrapper.powerup-ghost {
+  border-color: var(--neon-purple);
+  box-shadow: 0 0 25px rgba(189, 0, 255, 0.35), 0 0 20px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#canvas-wrapper.powerup-magnet {
+  border-color: var(--neon-yellow);
+  box-shadow: 0 0 25px rgba(255, 230, 0, 0.35), 0 0 20px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
